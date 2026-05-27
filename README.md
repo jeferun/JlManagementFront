@@ -43,7 +43,7 @@ src/
 
 Este proyecto está configurado para usar [NVM (Node Version Manager)](https://github.com/nvm-sh/nvm) para gestionar la versión de Node.js.
 
-El proyecto cuenta con un archivo `.nvmrc` en la raíz que fija la versión requerida de Node.js a **`20.15.0`**.
+El proyecto cuenta con un archivo `.nvmrc` en la raíz que fija la versión requerida de Node.js a **`22.14.0`**.
 
 ### Instalación y Uso de NVM:
 
@@ -57,13 +57,13 @@ El proyecto cuenta con un archivo `.nvmrc` en la raíz que fija la versión requ
    ```bash
    nvm install
    ```
-   *(Esto detectará el archivo `.nvmrc` e instalará la versión `20.15.0` de forma automática).*
+   *(Esto detectará el archivo `.nvmrc` e instalará la versión `22.14.0` de forma automática).*
 4. **Activar la versión correcta para trabajar:**
    A diferencia de Volta, **NVM no cambia de versión automáticamente por defecto** al entrar a una carpeta. Debes ejecutar manualmente lo siguiente cada vez que abras una nueva terminal en la carpeta del proyecto:
    ```bash
    nvm use
    ```
-   *Nota: Si al ejecutar `nvm use` la terminal te indica que la versión no está instalada (por ejemplo: `N/A: version "v20.15.0" is not yet installed`), instala la versión requerida corriendo:*
+   *Nota: Si al ejecutar `nvm use` la terminal te indica que la versión no está instalada (por ejemplo: `N/A: version "v22.14.0" is not yet installed`), instala la versión requerida corriendo:*
    ```bash
    nvm install
    ```
