@@ -124,7 +124,7 @@ export const AffiliateDetailPage = () => {
           )}
         </div>
 
-        <div className="border rounded-md bg-white overflow-hidden shadow-sm">
+        <div className="border border-slate-200/80 rounded-lg bg-white overflow-hidden shadow-md">
           <Table>
             <TableHeader>
               <TableRow>

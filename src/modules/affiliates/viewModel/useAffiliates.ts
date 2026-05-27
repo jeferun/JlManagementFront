@@ -9,10 +9,10 @@ export const useAffiliates = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const fetchAffiliates = useCallback(async (page = 1, page_size = 10, search = '') => {
+  const fetchAffiliates = useCallback(async (page = 1, page_size = 10, search = '', status = '') => {
     try {
       setIsLoading(true);
-      const res = await getAffiliates({ page, page_size, full_name: search });
+      const res = await getAffiliates({ page, page_size, full_name: search, status });
       setAffiliates(res.results);
       setTotalCount(res.total_count);
     } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any

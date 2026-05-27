@@ -38,8 +38,8 @@ export const ConfirmDialog = ({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={onClose}>
+        <DialogFooter className="mt-4 gap-2 sm:gap-0">
+          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
             {cancelText}
           </Button>
           <Button
@@ -48,6 +48,7 @@ export const ConfirmDialog = ({
               onConfirm();
               onClose();
             }}
+            className="w-full sm:w-auto"
           >
             {confirmText}
           </Button>

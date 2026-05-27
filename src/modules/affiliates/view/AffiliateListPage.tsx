@@ -8,16 +8,21 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/components/ui/table';
 import { Plus, Search, Trash2, Pencil, Play } from 'lucide-react';
-import { ConfirmDialog } from '@/shared/components/ui/confirm-dialog';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useRouter } from 'next/navigation';
 import { Affiliate } from '../model/types';
+import { ConfirmDialog } from '@/shared/components/ui/confirm-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/shared/components/ui/pagination';
 
 export const AffiliateListPage = () => {
-  const { affiliates, isLoading, fetchAffiliates, addAffiliate, editAffiliate, removeAffiliate } = useAffiliates();
+  const { affiliates, totalCount, isLoading, fetchAffiliates, addAffiliate, editAffiliate, removeAffiliate } = useAffiliates();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAffiliate, setSelectedAffiliate] = useState<Affiliate | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
   const debouncedSearch = useDebounce(searchTerm, 500);
   const router = useRouter();
 
@@ -32,7 +37,7 @@ export const AffiliateListPage = () => {
     isOpen: false,
     title: '',
     description: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   const handleOpenModal = (affiliate?: Affiliate) => {
@@ -53,8 +58,10 @@ export const AffiliateListPage = () => {
   };
 
   useEffect(() => {
-    fetchAffiliates(1, 10, debouncedSearch);
-  }, [debouncedSearch, fetchAffiliates]);
+    fetchAffiliates(page, pageSize, debouncedSearch, statusFilter);
+  }, [page, pageSize, debouncedSearch, statusFilter, fetchAffiliates]);
+
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
     <div className="space-y-6">
@@ -68,7 +75,7 @@ export const AffiliateListPage = () => {
         </Button>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
           <Input
@@ -76,12 +83,33 @@ export const AffiliateListPage = () => {
             placeholder="Buscar por nombre..."
             className="pl-9"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
           />
+        </div>
+        <div className="w-48">
+          <Select
+            value={statusFilter}
+            onValueChange={(val) => {
+              setStatusFilter(val === 'ALL' ? '' : val);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Todos</SelectItem>
+              <SelectItem value="ACTIVE">Activos</SelectItem>
+              <SelectItem value="INACTIVE">Inactivos</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <div className="border rounded-md bg-white overflow-hidden shadow-sm">
+      <div className="border border-slate-200/80 rounded-lg bg-white overflow-hidden shadow-md">
         <Table>
           <TableHeader>
             <TableRow>
@@ -107,8 +135,8 @@ export const AffiliateListPage = () => {
               </TableRow>
             ) : (
               affiliates.map((affiliate) => (
-                <TableRow 
-                  key={affiliate.id} 
+                <TableRow
+                  key={affiliate.id}
                   className={`transition-colors ${affiliate.status === 'ACTIVE' ? 'cursor-pointer hover:bg-slate-50' : 'opacity-75'}`}
                   onClick={() => {
                     if (affiliate.status === 'ACTIVE') {
@@ -121,11 +149,10 @@ export const AffiliateListPage = () => {
                   <TableCell>{affiliate.email}</TableCell>
                   <TableCell>
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        affiliate.status === 'ACTIVE'
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${affiliate.status === 'ACTIVE'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-slate-100 text-slate-800'
-                      }`}
+                        }`}
                     >
                       {affiliate.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
                     </span>
@@ -133,9 +160,9 @@ export const AffiliateListPage = () => {
                   <TableCell className="text-right space-x-2">
                     {affiliate.status === 'ACTIVE' ? (
                       <>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           title="Editar"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -164,16 +191,16 @@ export const AffiliateListPage = () => {
                         </Button>
                       </>
                     ) : (
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         title="Activar"
                         onClick={(e) => {
                           e.stopPropagation();
                           setConfirmModal({
                             isOpen: true,
                             title: 'Activar Afiliado',
-                            description: 'El afiliado puede tener aportes pendientes. ¿Está seguro de activar de nuevo a este afiliado?',
+                            description: '¿Está seguro de activar de nuevo a este afiliado?',
                             confirmText: 'Activar',
                             isDestructive: false,
                             onConfirm: () => editAffiliate(affiliate.id, { status: 'ACTIVE' }),
@@ -190,6 +217,45 @@ export const AffiliateListPage = () => {
           </TableBody>
         </Table>
       </div>
+
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (page > 1) setPage(page - 1);
+                }}
+              />
+            </PaginationItem>
+            {[...Array(totalPages)].map((_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  href="#"
+                  isActive={page === i + 1}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPage(i + 1);
+                  }}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (page < totalPages) setPage(page + 1);
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
 
       <AffiliateFormModal
         isOpen={isModalOpen}
