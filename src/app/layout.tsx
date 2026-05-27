@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { AppLayout } from "@/shared/components/layout/AppLayout";
+import { AffiliateProvider } from "@/modules/affiliates/model/AffiliateContext";
+import { DashboardProvider } from "@/modules/dashboard/model/DashboardContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -29,7 +31,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AppLayout>{children}</AppLayout>
+        <DashboardProvider>
+          <AffiliateProvider>
+            <AppLayout>{children}</AppLayout>
+          </AffiliateProvider>
+        </DashboardProvider>
       </body>
     </html>
   );

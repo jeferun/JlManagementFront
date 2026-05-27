@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useAffiliateDetail } from '../viewModel/useAffiliateDetail';
@@ -14,21 +13,20 @@ import { ConfirmDialog } from '@/shared/components/ui/confirm-dialog';
 export const AffiliateDetailPage = () => {
   const params = useParams();
   const affiliateId = Number(params.id);
-  const { affiliate, summary, contributions, isLoading, fetchDetail, addContribution, removeContribution } = useAffiliateDetail(affiliateId);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [confirmModal, setConfirmModal] = useState<{
-    isOpen: boolean;
-    contributionId: number | null;
-  }>({
-    isOpen: false,
-    contributionId: null,
-  });
-
-  useEffect(() => {
-    if (affiliateId) {
-      fetchDetail();
-    }
-  }, [affiliateId, fetchDetail]);
+  const {
+    affiliate,
+    summary,
+    contributions,
+    isLoading,
+    isModalOpen,
+    confirmModal,
+    handleOpenModal,
+    handleCloseModal,
+    openConfirmModal,
+    closeConfirmModal,
+    addContribution,
+    handleConfirmRemove,
+  } = useAffiliateDetail(affiliateId);
 
   const formatCurrency = (amount: number | string) => {
     return new Intl.NumberFormat('es-CO', {
@@ -118,7 +116,7 @@ export const AffiliateDetailPage = () => {
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-slate-900">Historial de Aportes</h2>
           {affiliate.status === 'ACTIVE' && (
-            <Button onClick={() => setIsModalOpen(true)}>
+            <Button onClick={handleOpenModal}>
               <Plus className="mr-2 h-4 w-4" /> Registrar Aporte
             </Button>
           )}
@@ -153,12 +151,7 @@ export const AffiliateDetailPage = () => {
                           variant="ghost"
                           size="icon"
                           title="Anular Aporte"
-                          onClick={() => {
-                            setConfirmModal({
-                              isOpen: true,
-                              contributionId: contribution.id,
-                            });
-                          }}
+                          onClick={() => openConfirmModal(contribution.id)}
                         >
                           <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>
@@ -174,23 +167,19 @@ export const AffiliateDetailPage = () => {
 
       <ContributionFormModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
         onSubmit={addContribution}
         isLoading={isLoading}
       />
 
       <ConfirmDialog
         isOpen={confirmModal.isOpen}
-        onClose={() => setConfirmModal({ isOpen: false, contributionId: null })}
+        onClose={closeConfirmModal}
         title="Anular Aporte"
         description="¿Está seguro de anular este aporte? Esta acción no se puede deshacer."
         confirmText="Anular"
         isDestructive={true}
-        onConfirm={() => {
-          if (confirmModal.contributionId) {
-            removeContribution(confirmModal.contributionId);
-          }
-        }}
+        onConfirm={handleConfirmRemove}
       />
     </div>
   );

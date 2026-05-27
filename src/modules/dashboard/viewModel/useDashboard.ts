@@ -1,35 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
-import { getGlobalDashboard, DashboardSummary } from '../services/dashboardService';
-import { useToast } from '@/shared/components/hooks/use-toast';
+import { useContext, useEffect } from 'react';
+import { DashboardContext } from '../model/DashboardContext';
 
 export const useDashboard = () => {
-  const [data, setData] = useState<DashboardSummary | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+  const context = useContext(DashboardContext);
+  
+  if (!context) {
+    throw new Error('useDashboard must be used within a DashboardProvider');
+  }
 
-  const fetchDashboard = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const res = await getGlobalDashboard();
-      setData(res);
-    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      toast({
-        title: 'Error loading dashboard',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
+  // Refresca la data cada vez que el usuario ingresa a la vista del Dashboard
   useEffect(() => {
-    fetchDashboard();
-  }, [fetchDashboard]);
+    context.refetch();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  return {
-    data,
-    isLoading,
-    refetch: fetchDashboard,
-  };
+  return context;
 };

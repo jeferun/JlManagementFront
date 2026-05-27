@@ -1,67 +1,40 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
 import { useAffiliates } from '../viewModel/useAffiliates';
 import { AffiliateFormModal } from './AffiliateFormModal';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/components/ui/table';
 import { Plus, Search, Trash2, Pencil, Play } from 'lucide-react';
-import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useRouter } from 'next/navigation';
-import { Affiliate } from '../model/types';
 import { ConfirmDialog } from '@/shared/components/ui/confirm-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/shared/components/ui/pagination';
 
 export const AffiliateListPage = () => {
-  const { affiliates, totalCount, isLoading, fetchAffiliates, addAffiliate, editAffiliate, removeAffiliate } = useAffiliates();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedAffiliate, setSelectedAffiliate] = useState<Affiliate | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [page, setPage] = useState(1);
-  const pageSize = 10;
-  const debouncedSearch = useDebounce(searchTerm, 500);
+  const {
+    affiliates,
+    isLoading,
+    page,
+    totalPages,
+    searchTerm,
+    statusFilter,
+    isModalOpen,
+    selectedAffiliate,
+    confirmModal,
+    handleOpenModal,
+    handleCloseModal,
+    handleSubmit,
+    handleSearch,
+    handleStatusFilter,
+    handlePageChange,
+    openConfirmModal,
+    closeConfirmModal,
+    removeAffiliate,
+    editAffiliate
+  } = useAffiliates();
+
   const router = useRouter();
-
-  const [confirmModal, setConfirmModal] = useState<{
-    isOpen: boolean;
-    title: string;
-    description: string;
-    confirmText?: string;
-    isDestructive?: boolean;
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: '',
-    description: '',
-    onConfirm: () => { },
-  });
-
-  const handleOpenModal = (affiliate?: Affiliate) => {
-    setSelectedAffiliate(affiliate || null);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedAffiliate(null);
-  };
-
-  const handleSubmit = async (data: Partial<Affiliate>) => {
-    if (selectedAffiliate) {
-      return editAffiliate(selectedAffiliate.id, data);
-    }
-    return addAffiliate(data);
-  };
-
-  useEffect(() => {
-    fetchAffiliates(page, pageSize, debouncedSearch, statusFilter);
-  }, [page, pageSize, debouncedSearch, statusFilter, fetchAffiliates]);
-
-  const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
     <div className="space-y-6">
@@ -83,19 +56,13 @@ export const AffiliateListPage = () => {
             placeholder="Buscar por nombre..."
             className="pl-9"
             value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setPage(1);
-            }}
+            onChange={(e) => handleSearch(e.target.value)}
           />
         </div>
         <div className="w-48">
           <Select
             value={statusFilter}
-            onValueChange={(val) => {
-              setStatusFilter(val === 'ALL' ? '' : val);
-              setPage(1);
-            }}
+            onValueChange={handleStatusFilter}
           >
             <SelectTrigger>
               <SelectValue placeholder="Todos" />
@@ -177,14 +144,11 @@ export const AffiliateListPage = () => {
                           title="Eliminar"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setConfirmModal({
-                              isOpen: true,
-                              title: 'Eliminar Afiliado',
-                              description: '¿Está seguro de eliminar al afiliado? Posiblemente tenga aportes pendientes.',
-                              confirmText: 'Eliminar',
-                              isDestructive: true,
-                              onConfirm: () => removeAffiliate(affiliate.id),
-                            });
+                            openConfirmModal(
+                              'Eliminar Afiliado',
+                              '¿Está seguro de eliminar al afiliado? Posiblemente tenga aportes pendientes.',
+                              () => removeAffiliate(affiliate.id)
+                            );
                           }}
                         >
                           <Trash2 className="h-4 w-4 text-red-500" />
@@ -197,14 +161,13 @@ export const AffiliateListPage = () => {
                         title="Activar"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setConfirmModal({
-                            isOpen: true,
-                            title: 'Activar Afiliado',
-                            description: '¿Está seguro de activar de nuevo a este afiliado?',
-                            confirmText: 'Activar',
-                            isDestructive: false,
-                            onConfirm: () => editAffiliate(affiliate.id, { status: 'ACTIVE' }),
-                          });
+                          openConfirmModal(
+                            'Activar Afiliado',
+                            '¿Está seguro de activar de nuevo a este afiliado?',
+                            () => editAffiliate(affiliate.id, { status: 'ACTIVE' }),
+                            false,
+                            'Activar'
+                          );
                         }}
                       >
                         <Play className="h-4 w-4 text-green-500" />
@@ -226,7 +189,7 @@ export const AffiliateListPage = () => {
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  if (page > 1) setPage(page - 1);
+                  if (page > 1) handlePageChange(page - 1);
                 }}
               />
             </PaginationItem>
@@ -237,7 +200,7 @@ export const AffiliateListPage = () => {
                   isActive={page === i + 1}
                   onClick={(e) => {
                     e.preventDefault();
-                    setPage(i + 1);
+                    handlePageChange(i + 1);
                   }}
                 >
                   {i + 1}
@@ -249,7 +212,7 @@ export const AffiliateListPage = () => {
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  if (page < totalPages) setPage(page + 1);
+                  if (page < totalPages) handlePageChange(page + 1);
                 }}
               />
             </PaginationItem>
@@ -272,7 +235,7 @@ export const AffiliateListPage = () => {
 
       <ConfirmDialog
         isOpen={confirmModal.isOpen}
-        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        onClose={closeConfirmModal}
         title={confirmModal.title}
         description={confirmModal.description}
         confirmText={confirmModal.confirmText}

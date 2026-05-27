@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { getAffiliate, getAffiliateSummary, getAffiliateContributions } from '../services/affiliateService';
 import { createContribution, deleteContribution } from '@/modules/contributions/services/contributionService';
 import { Affiliate, AffiliateSummary } from '../model/types';
@@ -11,6 +11,16 @@ export const useAffiliateDetail = (affiliateId: number) => {
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  // Local UI State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    contributionId: number | null;
+  }>({
+    isOpen: false,
+    contributionId: null,
+  });
 
   const fetchDetail = useCallback(async () => {
     try {
@@ -34,6 +44,12 @@ export const useAffiliateDetail = (affiliateId: number) => {
     }
   }, [affiliateId, toast]);
 
+  useEffect(() => {
+    if (affiliateId) {
+      fetchDetail();
+    }
+  }, [affiliateId, fetchDetail]);
+
   const addContribution = async (data: Partial<Contribution>) => {
     try {
       setIsLoading(true);
@@ -43,6 +59,7 @@ export const useAffiliateDetail = (affiliateId: number) => {
         description: 'Aporte registrado correctamente',
       });
       fetchDetail();
+      setIsModalOpen(false);
       return true;
     } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       toast({
@@ -65,6 +82,7 @@ export const useAffiliateDetail = (affiliateId: number) => {
         description: 'Aporte eliminado (anulado)',
       });
       fetchDetail();
+      setConfirmModal({ isOpen: false, contributionId: null });
       return true;
     } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       toast({
@@ -78,13 +96,42 @@ export const useAffiliateDetail = (affiliateId: number) => {
     }
   };
 
+  const handleOpenModal = useCallback(() => setIsModalOpen(true), []);
+  const handleCloseModal = useCallback(() => setIsModalOpen(false), []);
+
+  const openConfirmModal = useCallback((id: number) => {
+    setConfirmModal({
+      isOpen: true,
+      contributionId: id,
+    });
+  }, []);
+
+  const closeConfirmModal = useCallback(() => {
+    setConfirmModal({
+      isOpen: false,
+      contributionId: null,
+    });
+  }, []);
+
+  const handleConfirmRemove = useCallback(() => {
+    if (confirmModal.contributionId) {
+      removeContribution(confirmModal.contributionId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [confirmModal.contributionId]);
+
   return {
     affiliate,
     summary,
     contributions,
     isLoading,
-    fetchDetail,
+    isModalOpen,
+    confirmModal,
+    handleOpenModal,
+    handleCloseModal,
+    openConfirmModal,
+    closeConfirmModal,
     addContribution,
-    removeContribution,
+    handleConfirmRemove,
   };
 };
