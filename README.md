@@ -83,3 +83,9 @@ El proyecto cuenta con un archivo `.nvmrc` en la raíz que fija la versión requ
 
 3. **Abrir la Aplicación:**
    Navega a [http://localhost:3000](http://localhost:3000) en tu navegador.
+
+## 🚀 Limitaciones Conocidas y Mejoras Futuras
+
+- **Seguridad y Autenticación:** Actualmente las rutas son públicas. **Mejora:** Integrar NextAuth.js (JWT) para proteger vistas.
+- **Auditoría y Trazabilidad :** Implementar Historial de Auditoría
+- **Format/Lint:** Configurar ESLint y Prettier para formatear el código automáticamente.
